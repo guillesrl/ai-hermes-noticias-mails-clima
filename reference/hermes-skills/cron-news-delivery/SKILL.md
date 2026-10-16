@@ -68,11 +68,11 @@ Trigger: User asks for recurring daily news delivery via cron job with text + au
 
 Steps:
 1. **NO cargar skills pesadas** — usar `skills=[]` para evitar context bloat.
-2. **Check recent coverage** — Before searching, read the last 2-3 news files in `/home/ubuntu/hermes-notes/news/` and the latest cron output in the appropriate job directory to identify already-covered stories. Extract key topics/headlines to avoid.
-3. **Search news via RSS using curl** (see "Fuentes RSS" pitfall below). Get 7 relevant stories. Avoid topics already covered.
-4. Format results without URLs in the main text — use source names only (e.g., "Fuente: Ars Technica"). Ensure sources are distinct.
-5. **Write the full news content FIRST** to `/home/ubuntu/hermes-notes/news/` using write_file — this is the permanent record.
-6. Generate TTS audio using `text_to_speech`. **Edge TTS limit: keep text under 4,000 characters** (hard cap at 5,000). The audio text must be plain — no asterisks, no markdown. Numera como "Uno", "Dos", "Tres" para que suene natural. No leas URLs ni fuentes en el audio — solo el contenido noticioso.
+2. Search recent coverage — Before searching, read the last 2-3 news files in `/home/ubuntu/hermes-notes/news/` and the latest cron output in the appropriate job directory to identify already-covered stories. Extract key topics/headlines to avoid. Prefer a deterministic collector that emits stable IDs, structured JSON, and a human-readable view.
+3. Ejecuta la recopilación determinista con entradas estructuradas e IDs estables; conserva `raw-news.json`, `status.json`, `prior-headlines.json` y `emails.json`. No conviertas un error en «Hoy no hay noticias nuevas».
+4. Exige entre una y diez historias válidas cuando la recopilación terminó correctamente y contiene noticias. Valida los IDs contra `raw-news.json`, rechaza duplicados y rechaza respuestas vacías.
+5. Compón con un script separado y escribe de forma atómica; si falla una etapa, conserva el último briefing válido.
+6. Genera TTS solo después de validar la composición, con texto plano inferior a 3.900 caracteres y `output_path` explícito.
 7. **CRITICAL for cron delivery**: The final cron response must be **ONLY the MEDIA path**, nothing else:
 ```
 MEDIA:/home/ubuntu/.hermes/audio_cache/news-YYYY-MM-DD.ogg
@@ -100,6 +100,34 @@ Steps:
 ```bash
 cronjob(action='create', name='Briefing matutino', schedule='30 6 * * *', skills=[], enabled_toolsets=['web', 'tts', 'file', 'terminal'], model={'model': 'qwen3.6-plus', 'provider': 'opencode-go'})
 ```
+
+## Staged Briefing Pipeline
+
+For combined morning or evening briefings, keep deterministic collection separate from LLM reasoning. Do not put weather collection, RSS parsing, deduplication, filtering, email handling, composition, file writing, and TTS into one giant prompt or one shell command.
+
+1. Collection stage: run the weather collector and `/home/ubuntu/scripts/fetch-news.py` from a small, rerunnable script. Save raw news, weather, prior-headline context, and a machine-readable status file. Record whether the source returned zero, some, or malformed entries.
+2. Selection stage: give the LM only the collected news and prior topics. Ask it to select at most seven distinct valid stories and expand them in Spanish. Validate the response mechanically: if the input has news, the output must not claim there are none; every numbered item must contain a title and summary; every selected title must be present in the collected input; and the count must be between one and seven. Treat a failed validation as an error, never as a valid empty-news result.
+3. Composition stage: combine validated news, weather, and optional email text into the plain Spanish briefing. Write a temporary artifact first, validate its sections and item count, then atomically promote it to `/home/ubuntu/hermes-notes/news/briefing-manana-YYYY-MM-DD.md` or the corresponding evening path. Only after the artifact is valid, call `text_to_speech` with an explicit output path and verify the audio is non-empty.
+
+Keep stage outputs inspectable so a failed run identifies collection, selection, composition, or audio as the failing stage. If a stage fails, preserve the last valid briefing and report the stage failure rather than overwriting it with “Hoy no hay noticias nuevas de tecnología.” Keep the LM prompt short and task-specific; move parsing, filtering, counting, and file handling into deterministic scripts.
+
+### Parámetros verificados
+
+El cron activo usa `gpt-5.6-luna` con `openai-codex`, permite hasta diez noticias y mantiene el texto TTS por debajo de 3.900 caracteres. La recopilación de Gmail es independiente y `No messages found.` se clasifica como `empty`, sin bloquear las noticias.
+
+### Verified implementation pattern
+
+Use a rerunnable collector such as `/home/ubuntu/.hermes/scripts/briefing-collect.py` to create `/home/ubuntu/.hermes/briefing-runs/AAAA-MM-DD/`. The collection stage should emit `weather.json`, `raw-news.json`, `raw-news.txt`, `prior-headlines.json`, `emails.json`, and `status.json`. Give every news item a stable ID derived from source and normalized title; pass IDs through the LM response and validate IDs, not fuzzy title text.
+
+Keep email collection independent from news collection. Record `ok`, `empty`, or `failed` for Gmail; treat a known plain-text “no messages” response as `empty`, not as malformed JSON, and never let an email failure suppress valid news.
+
+Have the LM write only `selection-response.txt` in a unique or deterministic run directory. Validate mechanically before composition: reject an empty-news claim when `status.json` reports source entries, reject more than seven items, require each item to contain an existing source ID, and ensure every selected item has usable content. Compose with a small script that writes a temporary file and atomically promotes the final Markdown only after validation; call TTS only after that promotion and verify the audio is non-empty.
+
+Do not require the collector to run as one giant shell command, and do not embed a Python parser inside the cron prompt. Those designs make quoting, security scanning, and partial failures indistinguishable. Do not let `write_file` silently become the reliability gate for generated artifacts: write intermediate artifacts through deterministic scripts and temporary paths, or read existing files fully before replacing them. Preserve the last valid briefing whenever collection, selection, validation, composition, or audio fails.
+
+Pin the cron's model and provider explicitly after any global model change, then verify the persisted job configuration. This prevents inference drift from silently skipping a run or routing it to an unintended provider.
+
+The detailed staged design and validation rules belong in `references/staged-briefing-pipeline.md`.
 
 ## Pitfalls
 
@@ -200,7 +228,7 @@ These rules apply to every news briefing and replace the former standalone weath
 
 ### Shared pipeline
 
-1. Collect weather and RSS news with `terminal`; use `/home/ubuntu/scripts/fetch-news.py` and do not substitute `web_search`.
+1. Collect weather, RSS news, and optional emails with deterministic scripts. Prefer a structured RSS collector such as `/home/ubuntu/scripts/fetch-news-structured.py` that writes stable IDs and JSON; do not substitute `web_search` for the configured feed pipeline.
 2. Apply deduplication before selection. The morning briefing uses a 24-hour window. The evening briefing uses a 12-hour window, reads eight rows per feed, and excludes every topic already covered in that day's morning briefing.
 3. Select at most seven valid, distinct AI/technology stories. If feeds contain no valid non-duplicate stories, state that explicitly rather than inventing items.
 4. Compose plain Spanish text with accents and ñ; write the complete markdown artifact with `write_file` before calling `text_to_speech`.
@@ -216,3 +244,25 @@ Use separate `wttr.in` requests for condition, current temperature, humidity, an
 The evening job is independent from the morning job: use `briefing-tarde-YYYY-MM-DD.md`, a 12-hour news window, eight rows per feed, and no more than seven stories. Read `briefing-manana-YYYY-MM-DD.md` for the same date before collecting or selecting stories, and reject repeated topics even when the headline uses a different angle.
 
 ## Voice Configuration
+
+When a briefing is delivered with an unexpected voice, diagnose the runtime path before changing configuration:
+
+1. Read the active TTS configuration and record the configured provider and voice; distinguish the configured default from the provider actually used for that run.
+2. Inspect the cron run output and the TTS/agent logs for the same run. Look specifically for provider errors, fallback attempts, and a successful synthesis call; do not infer the fallback voice from the existence of an audio file alone.
+3. Verify the delivered artifact by checking its exact output path, modification time, and non-zero size, then confirm the cron response points to that same file. A successful cron status only proves delivery, not that the intended voice was used.
+4. Report the causal chain plainly: configured voice, failed provider, fallback provider if explicitly logged, and whether configuration changed persistently. If the successful fallback engine or voice is not logged, say that it is unknown rather than naming one.
+5. Only change the persistent TTS configuration after the user asks for a fix or restoration; a temporary provider failure is not evidence that the saved voice configuration changed.
+
+Prefer a short verification matrix in internal notes: configured provider/voice, attempted provider/result, successful provider/voice, artifact path/size, and persistent-config status. This prevents attributing a fallback voice to the wrong engine and prevents mistaking a stale or reused audio file for a fresh synthesis.
+
+### Edge TTS protocol/update check
+
+When Edge TTS returns HTTP 403 or `WSServerHandshakeError`, check the upstream `rany2/edge-tts` repository and the installed package version before changing voices or providers. Microsoft can change the Sec-MS-GEC handshake while the voice list remains available; an updated edge-tts release may add the required token protocol without changing the configured voice.
+
+Use this order:
+1. Inspect the exact environment used by the failing cron from its traceback, and run a short direct synthesis with the configured voice in that environment. A successful test in another Python environment proves nothing.
+2. Check Hermes' dependency pin in `~/.hermes/hermes-agent/pyproject.toml`; update the Edge extra to a release containing the current protocol (for example, `edge-tts>=7.3.1`) so newly created cron sandboxes do not recreate the stale client.
+3. Run the Hermes package-manager sync (`python3 -c 'import pm; pm.sync_venv(["edge-tts"], explicit=True)'`) and verify every existing managed environment under `~/.hermes/installs/*/environments/*/venv` with `import edge_tts; print(edge_tts.__version__)`. If a managed venv has no pip and remains stale, install into its `lib/python*/site-packages` with the host Hermes Python using `python3 -m pip install --upgrade --target=... 'edge-tts>=7.3.1'`.
+4. Restart the long-running gateway after upgrading because an already-running process can retain the old edge_tts module in memory, then run the cron in a fresh subprocess and verify the output path, modification time, non-zero size, and logs. A fresh direct synthesis alone does not prove the gateway has reloaded it.
+
+Treat Edge voices such as `es-MX-DaliaNeural` as cloud voices: edge-tts does not contain an offline model, so “install locally” means installing the client, not the Microsoft voice itself. Do not replace the voice silently when a protocol fix is available; if a fallback is needed, configure and verify its engine and voice explicitly.

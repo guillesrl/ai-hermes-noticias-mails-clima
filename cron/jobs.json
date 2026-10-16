@@ -20,15 +20,15 @@
       "schedule_display": "*/5 8-21 * * *",
       "repeat": {
         "times": null,
-        "completed": 16519
+        "completed": 20436
       },
-      "enabled": true,
-      "state": "scheduled",
-      "paused_at": null,
+      "enabled": false,
+      "state": "paused",
+      "paused_at": "2026-09-23T15:39:50.190530+00:00",
       "paused_reason": null,
       "created_at": "2026-05-24T14:28:00.371604+00:00",
-      "next_run_at": "2026-08-31T11:15:00+00:00",
-      "last_run_at": "2026-08-31T11:10:22.056992+00:00",
+      "next_run_at": "2026-09-23T15:40:00+00:00",
+      "last_run_at": "2026-09-23T15:35:13.367838+00:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -45,7 +45,13 @@
       "fire_claim": null,
       "failure_streak": 0,
       "provider_snapshot": null,
-      "model_snapshot": null
+      "model_snapshot": null,
+      "last_dispatch": {
+        "scheduled_at": "2026-09-23T15:35:00+00:00",
+        "dispatched_at": "2026-09-23T15:35:11.990630+00:00",
+        "lateness_seconds": 12.0,
+        "kind": "on_time"
+      }
     },
     {
       "id": "1d7c97544636",
@@ -67,15 +73,15 @@
       "schedule_display": "0 6 * * *",
       "repeat": {
         "times": null,
-        "completed": 98
+        "completed": 144
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-25T09:33:58.971225+00:00",
-      "next_run_at": "2026-09-01T06:00:00+00:00",
-      "last_run_at": "2026-08-31T06:00:20.619210+00:00",
+      "next_run_at": "2026-10-17T06:00:00+00:00",
+      "last_run_at": "2026-10-16T06:00:30.988681+00:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -92,12 +98,18 @@
       "fire_claim": null,
       "failure_streak": 0,
       "provider_snapshot": null,
-      "model_snapshot": null
+      "model_snapshot": null,
+      "last_dispatch": {
+        "scheduled_at": "2026-10-16T06:00:00+00:00",
+        "dispatched_at": "2026-10-16T06:00:27.553098+00:00",
+        "lateness_seconds": 27.6,
+        "kind": "on_time"
+      }
     },
     {
       "id": "a0f40735e7e2",
       "name": "Resumen día siguiente",
-      "prompt": "Busca eventos en el calendario de mañana del usuario usando la skill google-workspace.\n\nEjecuta este comando sustituyendo AAAA-MM-DD por la fecha de mañana (zona +02:00). Usa python3, no python: en este sistema el binario python no existe y el comando fallaría.\n\npython3 ${HERMES_HOME:-$HOME/.hermes}/skills/productivity/google-workspace/scripts/google_api.py calendar list --start AAAA-MM-DDT00:00:00+02:00 --end AAAA-MM-DDT23:59:59+02:00\n\nREGLA ABSOLUTA: los eventos SOLO pueden salir del JSON que devuelve ese comando en esta ejecución. Está PROHIBIDO inventar, suponer o completar un evento aunque parezca plausible o típico de un día normal, y está PROHIBIDO usar como datos los ejemplos que aparecen en la documentación de la skill (Taller, Lunch, Team Standup, Review y similares son ejemplos de la doc, no citas del usuario).\n\nQué responder:\n- Si el comando devuelve [] (lista vacía): responde EXACTAMENTE [SILENT] y nada más.\n- Si el comando falla, no se ejecuta, da error, o no puedes leer su salida: responde EXACTAMENTE [SILENT] y nada más. Nunca sustituyas un fallo por contenido inventado; es preferible no mandar nada que mandar una agenda falsa.\n- Solo si el JSON contiene al menos un evento real, escribe el resumen utilizando únicamente los campos summary, start, end, location y description de ese JSON.\n\nFormato del resumen (texto plano puro: sin markdown, sin negritas, sin asteriscos, sin bloques de código ni comillas triples):\n- Hora - Título del evento (ubicación si tiene) - Teléfono: descripción (si tiene)\n- Hora - Título del evento\n\nAl final di \"Eso es todo para mañana.\"\n\nTu respuesta FINAL debe ser SOLO ese texto. Sin encabezados, sin notas extra.",
+      "prompt": "Busca los eventos del calendario de mañana usando exclusivamente los datos devueltos por este comando, sustituyendo AAAA-MM-DD por la fecha de mañana en zona horaria +02:00:\n\npython3 ${HERMES_HOME:-$HOME/.hermes}/skills/productivity/google-workspace/scripts/google_api.py calendar list --start AAAA-MM-DDT00:00:00+02:00 --end AAAA-MM-DDT23:59:59+02:00\n\nReglas obligatorias:\n- No inventes, completes ni reutilices eventos de ejemplos o ejecuciones anteriores.\n- Usa únicamente los campos summary, start, end, location y description del JSON obtenido.\n- Si el comando devuelve [] o falla, responde exactamente [SILENT] y nada más.\n- Ignora calendarios Familia y Festivos Andorra si aparecen; usa los calendarios Principal y Restaurante.\n\nFormato de respuesta cuando existan eventos:\nAgenda para mañana:\n\nPara eventos de todo el día:\n📌 Todo el día: TÍTULO\n\nPara eventos con horario:\n🕘 HH:MM a HH:MM: TÍTULO\n📍 Ubicación: UBICACIÓN\n📝 Información: DESCRIPCIÓN\n\nReglas de presentación:\n- Muestra la hora de inicio y fin si ambas existen. Si solo existe inicio, muestra solo la hora de inicio.\n- No muestres líneas de Ubicación o Información si esos campos están vacíos.\n- Si la descripción contiene datos útiles como teléfono, vuelo, código de reserva, pasajeros o ruta, consérvalos en la línea Información y sepáralos con frases cortas para facilitar la lectura.\n- Si la ubicación contiene una ruta o terminal, muéstrala completa en su propia línea.\n- Ordena los eventos por hora; los eventos de todo el día van primero.\n- Separa cada evento con una línea en blanco.\n- Usa texto plano, sin markdown, sin asteriscos y sin comillas triples.\n\nTermina exactamente con:\nEso es todo para mañana.\n\nTu respuesta FINAL debe contener únicamente la agenda formateada o [SILENT].",
       "skills": [
         "google-workspace"
       ],
@@ -116,15 +128,15 @@
       "schedule_display": "0 21 * * *",
       "repeat": {
         "times": null,
-        "completed": 110
+        "completed": 156
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-05-25T16:26:51.887074+00:00",
-      "next_run_at": "2026-08-31T21:00:00+00:00",
-      "last_run_at": "2026-08-30T21:00:22.217746+00:00",
+      "next_run_at": "2026-10-16T21:00:00+00:00",
+      "last_run_at": "2026-10-15T21:00:42.187309+00:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -141,7 +153,13 @@
       "fire_claim": null,
       "provider_snapshot": null,
       "model_snapshot": null,
-      "failure_streak": 0
+      "failure_streak": 0,
+      "last_dispatch": {
+        "scheduled_at": "2026-10-15T21:00:00+00:00",
+        "dispatched_at": "2026-10-15T21:00:27.567953+00:00",
+        "lateness_seconds": 27.6,
+        "kind": "on_time"
+      }
     },
     {
       "id": "cbfff4cb9282",
@@ -163,15 +181,15 @@
       "schedule_display": "30 7 * * 2",
       "repeat": {
         "times": null,
-        "completed": 53
+        "completed": 61
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-06-11T17:01:34.003774+00:00",
-      "next_run_at": "2026-09-01T07:30:00+00:00",
-      "last_run_at": "2026-08-25T07:30:24.627210+00:00",
+      "next_run_at": "2026-10-20T07:30:00+00:00",
+      "last_run_at": "2026-10-13T07:30:32.884412+00:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -186,12 +204,19 @@
       "workdir": null,
       "fire_claim": null,
       "provider_snapshot": null,
-      "model_snapshot": null
+      "model_snapshot": null,
+      "failure_streak": 0,
+      "last_dispatch": {
+        "scheduled_at": "2026-10-13T07:30:00+00:00",
+        "dispatched_at": "2026-10-13T07:30:26.496189+00:00",
+        "lateness_seconds": 26.5,
+        "kind": "on_time"
+      }
     },
     {
       "id": "42e2741205a0",
       "name": "Briefing matutino",
-      "prompt": "Este cron genera un briefing matutino con clima, emails y noticias IA en un solo audio. EJECUTA CADA PASO EN ORDEN ANTES DE PASAR AL SIGUIENTE.\n\nREGLAS DE ARRANQUE OBLIGATORIAS:\n- AUNQUE ya exista un archivo briefing-manana-AAAA-MM-DD.md para hoy, DEBES volver a recopilar TODO desde cero (clima, mails, noticias) y REESCRIBIR el archivo completo con write_file. NUNCA reutilices ni te saltes pasos pensando que \"ya está hecho\".\n- El PASO 1 debe ejecutarse SIEMPRE como un unico comando terminal.\n\nPASO 1 - RECOPILAR (clima + dedup + noticias) EN UN SOLO comando terminal, no lo dividas en varios:\n# Obtener componentes del clima por separado y formatearlos para TTS en español\nCONDICION=$(curl -s \"https://wttr.in/Andorra?format=%C&lang=es\")  # Ej: \"Despejado\"\nTEMP_ACTUAL_NUM=$(curl -s \"https://wttr.in/Andorra?format=%t&lang=es\" | sed 's/[^0-9-]//g')  # Solo número\nTEMP_ACTUAL=\"${TEMP_ACTUAL_NUM} grados\"  # Ej: \"21 grados\"\n# MEJORA 1: Extracción robusta de temperatura máxima usando JSON parsing\nTEMP_MAX_NUM=$(curl -s \"https://wttr.in/Andorra?format=j1\" | python3 -c \"import sys,json; data=json.load(sys.stdin); print(data['weather'][0]['maxtempC'])\" 2>/dev/null || echo \"21\")  # Valor por defecto si falla\nTEMP_MAX=\"${TEMP_MAX_NUM} grados\"  # Ej: \"21 grados\"\nHUMEDAD_NUM=$(curl -s \"https://wttr.in/Andorra?format=%h&lang=es\" | sed 's/[^0-9]//g')  # Solo número\nHUMEDAD=\"${HUMEDAD_NUM} por ciento\"  # Ej: \"45 por ciento\" en lugar de \"45%\"\n# Procesar viento: convertir símbolo a dirección y cambiar unidad\nVIENTO_RAW=$(curl -s \"https://wttr.in/Andorra?format=%w&lang=es\")  # Ej: \"↗13km/h\"\nVIENTO_DIR_SYMBOL=$(echo \"$VIENTO_RAW\" | sed 's/[^↖↗↘↙→←↑↓]//g')\nVIENTO_SPEED=$(echo \"$VIENTO_RAW\" | sed 's/[^0-9]//g')\ncase \"$VIENTO_DIR_SYMBOL\" in\n  \"↖\") VIENTO_DIR=\"noroeste\" ;;\n  \"↗\") VIENTO_DIR=\"noreste\" ;;\n  \"☘\") VIENTO_DIR=\"sureste\" ;;\n  \"↙\") VIENTO_DIR=\"suroeste\" ;;\n  \"→\") VIENTO_DIR=\"este\" ;;\n  \"←\") VIENTO_DIR=\"oeste\" ;;\n  \"↑\") VIENTO_DIR=\"norte\" ;;\n  \"↓\") VIENTO_DIR=\"sur\" ;;\n  *) VIENTO_DIR=\"dirección variable\" ;;\nesac\nVIENTO=\"del $VIENTO_DIR a $VIENTO_SPEED kilómetros por hora\"  # Ej: \"del noreste a 13 kilómetros por hora\"\n# Output the formatted values as environment variables for use in the briefing text\necho \"CONDICION_FORMATEADA=\\\"$CONDICION\\\"\"\necho \"TEMP_ACTUAL_FORMATEADO=\\\"$TEMP_ACTUAL\\\"\"\necho \"TEMP_MAX_FORMATEADO=\\\"$TEMP_MAX\\\"\"\necho \"HUMEDAD_FORMATEADA=\\\"$HUMEDAD\\\"\"\necho \"VIENTO_FORMATEADO=\\\"$VIENTO\\\"\"\necho \"===MAX===\"\necho \"$TEMP_MAX_NUM\"\necho \"===DEDUP (solo dias ANTERIORES, NUNCA el de hoy)===\"\nHOY=$(date +%F); for f in $(ls -t /home/ubuntu/hermes-notes/news/briefing-manana-*.md 2>/dev/null | grep -v \"$HOY\" | head -3); do grep -oP \"(?:Uno|Dos|Tres|Cuatro|Cinco|Seis|Siete|Ocho|Nueve|Diez)\\\\.\\\\s*\\\\K[^\\\\n]+\" \"$f\" 2>/dev/null; done | head -15; echo \"===NOTICIAS===\"; python3 /home/ubuntu/scripts/fetch-news.py 24 | python3 -c \"\nimport sys\nimport re\nfrom datetime import datetime, timezone, timedelta\n\n# MEJORA 2: Mejor procesamiento de noticias con filtrado de categorías y limpieza robusta\ndef clean_text(text):\n    # Eliminar entidades HTML\n    text = re.sub(r'&nbsp;', ' ', text)\n    text = re.sub(r'&[a-zA-Z]+;', ' ', text)\n    text = re.sub(r'&#(\\\\\\\\d+);', lambda m: chr(int(m.group(1))), text)\n    # Normalizar espacios\n    text = re.sub(r'\\\\\\\\s+', ' ', text).strip()\n    return text\n\ndef is_valid_category(title, summary):\n    title_lower = title.lower()\n    summary_lower = summary.lower()\n    \n    # CATEGORIAS AUTORIZADAS (deben incluir al menos una)\n    authorized_patterns = [\n        # (a) litigios/regulacion de IA\n        r'litigio|demanda|copyright|propiedad intelectual|regulacion|ley|tribunal|corte|sony|warner|anthropic|openai|google|microsoft|apple|meta|amazon',\n        # (b) infraestructura/hardware de IA\n        r'nvidia|gpu|chip|procesador|centro de datos|data center|infraestructura|hardware|servidor|almamacenamiento',\n        # (c) lanzamientos o nuevas funciones de producto\n        r'lanzamiento|nueva funcion|actualizacion|update|release|gemini|sheets canvas|copilot|llm|modelo|ia|inteligencia artificial',\n        # (d) ciberseguridad\n        r'ciberseguridad|ciber ataque|hack|virus|malware|bot|red de bots|android pulse|x|twitter|desmantelado|seguridad',\n        # (e) movimientos de empresas o investigacion de la industria tech\n        r'adquisicion|fusion|inversion|venture capital|financiacion|resultado|ganancias|beneficios|ceo|fundador|empresa|compañia|startup'\n    ]\n    \n    # DESCARTAR explícitamente\n    forbidden_patterns = [\n        r'vida personal|biografia|esposa|marido|hijo|familia|casado|soltero',\n        r'consejo de inversion|finanzas personales|acciones|bolsa|trading|criptomoneda|bitcoin|ethereum',\n        r'tips de consumo|como hacer|tutorial|guia|recomendacion de producto',\n        r'videojuego|entretenimiento|gta 6|youtube|netflix|spotify|tiktok|instagram',\n        r'curiosidad|dato curioso|sabias que|que sabias'\n    ]\n    \n    # Verificar forbidden primero\n    for pattern in forbidden_patterns:\n        if re.search(pattern, title_lower) or re.search(pattern, summary_lower):\n            return False\n    \n    # Verificar authorized (al menos uno debe coincidir)\n    for pattern in authorized_patterns:\n        if re.search(pattern, title_lower) or re.search(pattern, summary_lower):\n            return True\n    \n    return False\n\n# Procesar líneas de entrada\nlines = sys.stdin.read().split('\\\\n')\nvalid_news = []\ncurrent_date = None\ncurrent_title = None\ncurrent_summary = None\n\nfor line in lines:\n    line = line.strip()\n    if line.startswith('===') and line.endswith('==='):\n        continue\n    elif line.startswith('[') and ']' in line:\n        # Nueva noticia: [fecha] titulo\n        if current_title and current_summary and is_valid_category(current_title, current_summary):\n            valid_news.append((current_date, current_title, current_summary))\n        # Extraer fecha y titulo\n        date_end = line.find(']')\n        if date_end != -1:\n            current_date = line[1:date_end]\n            current_title = line[date_end+2:].strip()\n            current_summary = None\n    elif line.startswith('    ') and current_title:\n        # Línea de resumen (4 espacios)\n        if current_summary is None:\n            current_summary = line[4:].strip()\n        else:\n            current_summary += ' ' + line[4:].strip()\n\n# Última noticia\nif current_title and current_summary and is_valid_category(current_title, current_summary):\n    valid_news.append((current_date, current_title, current_summary))\n\n# Salida formateada\nprint('===NOTICIAS_PROCESADAS===')\nfor i, (date, title, summary) in enumerate(valid_news[:7], 1):\n    # Limpiar título y resumen\n    title_clean = clean_text(title)\n    summary_clean = clean_text(summary)\n    # Asegurar que el título termine en punto y tenga menos de 90 caracteres\n    if not title_clean.endswith('.'):\n        title_clean += '.'\n    if len(title_clean) > 90:\n        title_clean = title_clean[:87] + '...'\n    print(f'{i}. {title_clean}')\n    if summary_clean:\n        # Mantener resúmenes informativos de hasta 45 palabras\n        words = summary_clean.split()\n        if len(words) > 45:\n            summary_clean = ' '.join(words[:45]) + '.'\n        print(f'    {summary_clean}')\n    print()\n\"\nfi\n\nGAPI=\"python3 ~/.hermes/skills/productivity/google-workspace/scripts/google_api.py\"\n\nPASO 2 - EMAILS: ejecuta $GAPI gmail search \\\"is:unread in:inbox newer_than:2d\\\" --max 10\nNO abras ningun email con gmail get; usa solo from/subject/snippet/date. NO proceses esa salida con jq ni otro script — leela directo (la salida del propio comando, o read_file si hace falta); si un comando de procesamiento falla, no reintentes con otra variante de script, lee la salida cruda directamente. Del campo \\\\\\\"from\\\\\\\" usa UNICAMENTE el nombre para mostrar (la parte antes de \\\\\\\"<\\\\\\\"), NUNCA la direccion de email ni el dominio completo — no los leas ni los escribas en el texto, un dominio largo (.com, subdominios) se lee mal en voz alta y es facil transcribirlo mal. Para cada email escribe el asunto MAS una frase de resumen basado en el snippet — REESCRIBILA vos con tus propias palabras, de MAXIMO 15 palabras, NUNCA copies el snippet tal cual ni lo cortes a la mitad: el snippet suele traer basura de tracking (espacios invisibles, saltos raros) y frases picadas, si lo copias literal eso pasa al audio. Traduci/parafraseá al español si el original esta en otro idioma. Antes de dar por terminada la frase, revisala una vez mas buscando palabras pegadas sin espacio (typo comun al traducir, ej. \\\\\\\"cursosskills\\\\\\\" en vez de \\\\\\\"cursos\\\\\\\" — corregilo si aparece). REGLA INQUEBRANTABLE sobre simbolos: antes de escribir la frase final, revisa que no haya quedado NINGUN simbolo % literal en todo el bloque de mails — convertilo siempre a la palabra \\\\\\\"por ciento\\\\\\\" (ej. \\\\\\\"25%\\\\\\\" -> \\\\\\\"25 por ciento\\\\\\\", \\\\\\\"-82%\\\\\\\" -> \\\\\\\"82 por ciento de descuento\\\\\\\"), igual que ya se hace con el clima; lo mismo con otros simbolos como $ o € (dolares/euros en vez del simbolo). Lista TODOS los emails RECIBIDOS (incluidas notificaciones automaticas como Uber, LinkedIn, promos); NUNCA incluyas correos que hayas enviado tu (por ejemplo los de \\\\\\\"envio a Kindle\\\\\\\" o respuestas automaticas).\n\nPASO 3 - SELECCIONAR NOTICIAS (INCLUSIVO): del volcado del PASO 1, INCLUYE TODAS las noticias que caigan en estas CATEGORIAS AUTORIZADAS, hasta un maximo de 7, y descarta el resto. CATEGORIAS AUTORIZADAS (TODO lo siguiente es NOTICIA VALIDA y DEBE incluirse si aparece): (a) litigios/regulacion de IA — ej. demandas de copyright como Sony y Warner contra Anthropic; (b) infraestructura/hardware de IA — ej. Nvidia mas alla del GPU, centros de datos; (c) lanzamientos o nuevas funciones de producto — ej. Gemini Sheets canvas; (d) ciberseguridad — ej. X desmantela red de bots, apps que se instalan solas como Android Pulse; (e) movimientos de empresas o investigacion de la industria tech. DESCARTA SOLO: vida personal/biografia de figuras del sector; consejos de inversion personal o finanzas no ligadas a un producto/empresa tech (pero SI incluye movimientos de empresas o VC que afecten a la industria); tips de consumo cotidiano; videojuegos/entretenimiento (GTA 6, listas de tendencias de YouTube); curiosidades sin relacion con tech. Aplica el dedup SOLO contra los briefings de dias ANTERIORES (nunca contra el de hoy). Cuenta cuantas noticias validas reuniste y escribe EXACTAMENTE ese numero de entradas (Uno, Dos, ...), sin dejar ninguna sin su noticia. Si hay mas de 7 validas, quedate con las 7 mas recientes.\n\nPASO 4 - COMPONER TEXTO: Crea el briefing (texto plano, SIN markdown, SIN asteriscos):\n\nORTOGRAFIA OBLIGATORIA: escribe en español correcto, con TODAS las tildes y con la letra ñ. El texto se convierte a voz TAL CUAL: si escribes \\\\\\\"ano\\\\\\\" el audio dirá \\\\\\\"ano\\\\\\\" en vez de \\\\\\\"año\\\\\\\". Usa siempre: año, español, mañana, niño, compañía, diseño, señor, pequeño; y tildes en días, tecnología, aquí, está, más, según, energía, millón. NUNCA replacees ñ por n ni quites acentos.\n\nBuenos días Guille, aquí va tu briefing.\n\nEn Andorra hoy: [CONDICION_FORMATEADA], [TEMP_ACTUAL_FORMATEADO], máxima [TEMP_MAX_FORMATEADO], humedad [HUMEDAD_FORMATEADA], viento [VIENTO_FORMATEADO].\n\nMails pendientes:\n[EMAIL_OUTPUT]\n\nY en noticias de IA y tecnologia:\nUno. [titulo y resumen con fuente]\nDos. [titulo y resumen con fuente]\nTres. [titulo y resumen con fuente]\nCuatro. [titulo y resumen con fuente]\nCinco. [titulo y resumen con fuente]\nSeis. [titulo y resumen con fuente]\nSiete. [titulo y resumen con fuente]\n(Escribe SOLO tantos numeros como noticias reales hayas seleccionado en el PASO 3 — si son 4, la lista termina en Cuatro. NUNCA dejes un numero sin su noticia. Si tras el PASO 3 NO quedo ninguna noticia valida, no escribas ningun numero: reemplaza todo este bloque por una sola linea \\\\\\\"Hoy no hay noticias nuevas de tecnologia.\\\\\\\")\n\nEso es todo por hoy.\n\nPASO 5 - ESCRIBIR ARCHIVO:\nIMPORTANTE: YYYY-MM-DD es la fecha de HOY. Obtenla con terminal: date +%F. El \\\\\\\"manana\\\\\\\" del nombre significa \\\\\\\"de la mañana\\\\\\\" (briefing matutino), NO el dia siguiente: usa SIEMPRE la fecha de hoy.\nEscribe el texto con write_file en /home/ubuntu/hermes-notes/news/briefing-manana-YYYY-MM-DD.md\n\nPASO 6 - AUDIO:\nConvierte con text_to_speech output_path=\\\\\\\"/home/ubuntu/.hermes/audio_cache/briefing-YYYY-MM-DD.ogg\\\\\\\"\n\nTu respuesta final SOLO:\nMEDIA:/home/ubuntu/.hermes/audio_cache/briefing-YYYY-MM-DD.ogg\n\nRECORDATORIO CRITICO (no lo ignores): DESPUES de redactar el texto es OBLIGATORIO, en este orden, (1) ejecutar la herramienta gmail del PASO 2 si no lo has hecho, (2) llamar a write_file (PASO 5) para guardar el briefing, y (3) llamar a text_to_speech (PASO 6) para generar el audio. NO devuelvas el texto del briefing como respuesta. Tu ULTIMO mensaje debe ser UNICAMENTE la linea MEDIA:/home/ubuntu/.hermes/audio_cache/briefing-YYYY-MM-DD.ogg (con la fecha real). Si respondes con el texto en vez de llamar a write_file y text_to_speech, el trabajo se considera FALLIDO.",
+      "prompt": "Briefing matutino por etapas. El modelo LM y TTS ya funcionan; no los cambies.\n\nETAPA 1 - RECOPILACIÓN DETERMINISTA:\nEjecuta exactamente: python3 /home/ubuntu/.hermes/scripts/briefing-collect.py\nDespués lee el JSON impreso y los archivos de /home/ubuntu/.hermes/briefing-runs/AAAA-MM-DD/. Si news_status es failed, detén el flujo y conserva el último briefing válido. Si news_status es empty, solo entonces informa que no hay noticias; nunca inventes ni reutilices noticias.\n\nETAPA 2 - SELECCIÓN Y REDACCIÓN:\nLee raw-news.txt y prior-headlines.json. Selecciona hasta diez noticias distintas de IA o tecnología, excluyendo temas ya cubiertos. Si raw-news.txt contiene entradas, está prohibido responder que no hay noticias. El texto completo final debe mantenerse por debajo de 3.900 caracteres para evitar truncamiento de TTS. Cada entrada debe comenzar con Uno., Dos., Tres., etc., incluir el titular original y un resumen en español de 25 a 35 palabras, sin inventar datos. Guarda tu respuesta completa en /home/ubuntu/.hermes/briefing-runs/AAAA-MM-DD/selection-response.txt usando write_file.\n\nETAPA 2B - VALIDACIÓN:\nEjecuta: python3 /home/ubuntu/scripts/briefing_pipeline/validate_selection.py --input /home/ubuntu/.hermes/briefing-runs/AAAA-MM-DD --response /home/ubuntu/.hermes/briefing-runs/AAAA-MM-DD/selection-response.txt --output /home/ubuntu/.hermes/briefing-runs/AAAA-MM-DD/selection.json\nSustituye AAAA-MM-DD por la fecha obtenida con date +%F. Si devuelve error, no escribas un briefing vacío y no generes audio. Responde indicando que falló la etapa de selección.\n\nETAPA 3 - COMPOSICIÓN:\nObtén los mails con el comando GAPI habitual. Si Gmail falla, usa No hay mails pendientes. Ejecuta: python3 /home/ubuntu/scripts/briefing_pipeline/compose_stage.py --date AAAA-MM-DD --workdir /home/ubuntu/.hermes/briefing-runs/AAAA-MM-DD --emails 'TEXTO_DE_MAILS'\nLa herramienta escribe atómicamente /home/ubuntu/hermes-notes/news/briefing-manana-AAAA-MM-DD.md. Verifica el archivo antes de continuar.\n\nETAPA 4 - AUDIO:\nLee el Markdown generado y llama a text_to_speech con output_path=/home/ubuntu/.hermes/audio_cache/briefing-AAAA-MM-DD.ogg. Comprueba que el archivo existe y no está vacío.\n\nReglas: texto plano, español correcto, tildes y ñ, sin asteriscos ni URLs en el audio. Nunca conviertas un error de recopilación o validación en “Hoy no hay noticias nuevas”. Conserva el último briefing válido ante cualquier error.\n\nRespuesta final: únicamente MEDIA:/home/ubuntu/.hermes/audio_cache/briefing-AAAA-MM-DD.ogg\n",
       "skills": [],
       "skill": null,
       "model": "gpt-5.6-luna",
@@ -210,15 +235,15 @@
       "schedule_display": "30 6 * * *",
       "repeat": {
         "times": null,
-        "completed": 16
+        "completed": 74
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-08-29T06:58:58.993156+00:00",
-      "next_run_at": "2026-09-01T06:30:00+00:00",
-      "last_run_at": "2026-08-31T11:01:53.489170+00:00",
+      "next_run_at": "2026-10-17T06:30:00+00:00",
+      "last_run_at": "2026-10-16T11:42:34.226651+00:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -238,8 +263,18 @@
       ],
       "workdir": null,
       "fire_claim": null,
-      "failure_streak": 0
+      "failure_streak": 0,
+      "last_dispatch": {
+        "scheduled_at": "2026-10-16T06:30:00+00:00",
+        "dispatched_at": "2026-10-16T06:30:27.551448+00:00",
+        "lateness_seconds": 27.6,
+        "kind": "on_time"
+      },
+      "last_failure": {
+        "at": "2026-10-14T11:19:56.659687+00:00",
+        "detail": "El briefing se guardó correctamente en /home/ubuntu/hermes-notes/news/briefing-manana-2026-10-14.md, pero la generación del audio falló: el proveedor Edge TTS respondió HTTP 403 en dos intentos.\n\n⚠️ File-mutation verifier: 1 file edit(s) FAILED this turn despite any wording above that may suggest otherwise. Run `git status` or `read_file` to confirm what actually landed.\n  • `/home/ubuntu/.hermes/config.yaml` — [patch] Refusing to write to Hermes config file: `/home/ubuntu/.hermes/config.yaml` Agent cannot modify security-sensitive configuration. Edit `~/.hermes/config.yaml` directly or use 'hermes …"
+      }
     }
   ],
-  "updated_at": "2026-08-31T11:10:22.058259+00:00"
+  "updated_at": "2026-10-16T12:03:04.207056+00:00"
 }

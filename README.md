@@ -31,4 +31,25 @@ Otro agente puede leer y entender el prompt de cada job como texto, pero no pued
 
 ## Fuente de verdad
 
-La fuente de verdad sigue siendo el servidor de Guille (`~/.hermes/cron/jobs.json` y `~/.hermes/skills/`). Este repo es un respaldo manual, no se sincroniza automáticamente.
+La fuente de verdad sigue siendo el servidor de Guille (`~/.hermes/cron/jobs.json` y `~/.hermes/skills/`). Este repo conserva una copia versionada del flujo y de su documentación; los cambios operativos deben probarse en el servidor y después sincronizarse aquí.
+
+## Pipeline reforzado del briefing matutino
+
+El flujo actual está dividido en etapas para que un fallo no se convierta en el mensaje incorrecto «Hoy no hay noticias nuevas»:
+
+1. `scripts/briefing_pipeline/collect_stage.py` recopila clima, RSS estructurado, titulares previos y correo opcional.
+2. `scripts/briefing_pipeline/validate_selection.py` valida la respuesta del modelo mediante IDs estables y permite hasta diez noticias.
+3. `scripts/briefing_pipeline/compose_stage.py` compone el texto final, comprueba el conteo y escribe de forma atómica.
+4. `scripts/briefing-collect.py` sirve como lanzador del cron.
+5. El audio se genera únicamente después de validar el briefing y debe tener tamaño distinto de cero.
+
+Artefactos de diagnóstico: `raw-news.json`, `status.json`, `selection.json`, `composition-status.json` y `emails.json`. Si una etapa falla, se conserva el último briefing válido.
+
+Pruebas:
+
+```bash
+python3 -m py_compile scripts/fetch-news-structured.py scripts/briefing_pipeline/*.py scripts/briefing_pipeline/tests/*.py
+python3 scripts/briefing_pipeline/tests/test_pipeline.py
+```
+
+El prompt activo usa el modelo `gpt-5.6-luna` con proveedor `openai-codex`, selecciona entre una y diez noticias cuando existen entradas válidas y mantiene el texto de audio por debajo de 3.900 caracteres.
