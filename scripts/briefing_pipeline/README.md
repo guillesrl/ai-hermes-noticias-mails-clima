@@ -51,7 +51,8 @@ El briefing se divide en etapas pequeñas. La recopilación y las validaciones s
    Antes de componer, las temperaturas se normalizan: `-0` y `+0` se convierten
    en `cero grados`, los valores negativos como `-5` en `cinco grados bajo cero`,
    y los valores habituales se escriben en palabras para evitar lecturas ambiguas
-   del TTS (`seis grados`, `doce grados`).
+   del TTS (`seis grados`, `doce grados`). El viento también se escribe completo:
+   `4km/h` se convierte en `cuatro kilómetros por hora`.
 
 5. Audio
 

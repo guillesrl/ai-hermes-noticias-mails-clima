@@ -45,7 +45,11 @@ def spoken(value: str, fallback: str) -> str:
     value = value.replace('↘', 'sureste ').replace('↙', 'suroeste ')
     value = value.replace('→', 'este ').replace('←', 'oeste ')
     value = value.replace('↑', 'norte ').replace('↓', 'sur ')
-    value = re.sub(r'(?P<n>\d+)km/h', r'\g<n> kilómetros por hora', value)
+    value = re.sub(
+        r'(?P<n>\d+)km/h',
+        lambda match: f'{number_words(int(match.group("n")))} kilómetros por hora',
+        value,
+    )
     return re.sub(r'\s+', ' ', value).strip()
 
 def main() -> int:
