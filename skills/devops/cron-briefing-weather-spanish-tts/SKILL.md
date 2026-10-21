@@ -19,9 +19,10 @@ Formatear cada componente del clima por separado para que sea legible y comprens
 ### Paso 1: Extraer y formatear componentes del clima
 
 Normaliza siempre las temperaturas antes de enviarlas al texto o al TTS: convierte
-`-0`, `+0` y variantes Unicode a `cero grados`, elimina el signo positivo y, para
-evitar lecturas ambiguas, escribe los números de temperatura en palabras (`seis
-grados`, `doce grados`). No confíes en que el motor TTS interprete correctamente
+`-0`, `+0` y variantes Unicode a `cero grados`, convierte temperaturas negativas
+como `-5` en `cinco grados bajo cero`, elimina el signo positivo y, para evitar
+lecturas ambiguas, escribe los números de temperatura en palabras (`seis grados`,
+`doce grados`). No confíes en que el motor TTS interprete correctamente
 los signos de `wttr.in`.
 ```bash
 # Condición meteorológica (texto en español)

@@ -30,7 +30,9 @@ def spoken_temperature(value: str, fallback: str) -> str:
         return fallback
     number = int(match.group(1))
     # Nunca permitir que la salida hablada contenga "menos cero" o "-0".
-    return f'{"menos " if number < 0 else ""}{number_words(abs(number))} grados'
+    if number < 0:
+        return f'{number_words(abs(number))} grados bajo cero'
+    return f'{number_words(number)} grados'
 
 def spoken(value: str, fallback: str) -> str:
     value = (value or '').strip()

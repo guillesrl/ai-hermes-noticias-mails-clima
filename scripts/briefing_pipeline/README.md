@@ -49,8 +49,9 @@ El briefing se divide en etapas pequeñas. La recopilación y las validaciones s
    `/home/ubuntu/hermes-notes/news/briefing-manana-AAAA-MM-DD.md`
 
    Antes de componer, las temperaturas se normalizan: `-0` y `+0` se convierten
-   en `cero grados`, y los valores habituales se escriben en palabras para evitar
-   lecturas ambiguas del TTS (`seis grados`, `doce grados`).
+   en `cero grados`, los valores negativos como `-5` en `cinco grados bajo cero`,
+   y los valores habituales se escriben en palabras para evitar lecturas ambiguas
+   del TTS (`seis grados`, `doce grados`).
 
 5. Audio
 

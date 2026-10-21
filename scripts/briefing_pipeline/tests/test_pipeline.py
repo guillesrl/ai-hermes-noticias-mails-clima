@@ -23,6 +23,7 @@ spec=importlib.util.spec_from_file_location('compose_stage','/opt/proyectos/noti
 assert spec is not None and spec.loader is not None
 compose=importlib.util.module_from_spec(spec); spec.loader.exec_module(compose)
 assert compose.spoken_temperature('-0°C', 'fallback') == 'cero grados'
+assert compose.spoken_temperature('-5°C', 'fallback') == 'cinco grados bajo cero'
 assert compose.spoken_temperature('+6°C', 'fallback') == 'seis grados'
 assert compose.spoken_temperature('12', 'fallback') == 'doce grados'
 assert compose.spoken('↖4km/h', 'fallback') == 'noroeste 4 kilómetros por hora'
