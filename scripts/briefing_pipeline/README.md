@@ -48,6 +48,10 @@ El briefing se divide en etapas pequeñas. La recopilación y las validaciones s
 
    `/home/ubuntu/hermes-notes/news/briefing-manana-AAAA-MM-DD.md`
 
+   Antes de componer, las temperaturas se normalizan: `-0` y `+0` se convierten
+   en `cero grados`, y los valores habituales se escriben en palabras para evitar
+   lecturas ambiguas del TTS (`seis grados`, `doce grados`).
+
 5. Audio
 
    Solo después de validar y guardar el Markdown se ejecuta `text_to_speech` con el modelo TTS actualmente configurado. El audio debe guardarse en:

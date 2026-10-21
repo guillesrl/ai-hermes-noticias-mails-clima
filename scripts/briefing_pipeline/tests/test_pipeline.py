@@ -17,3 +17,13 @@ with tempfile.TemporaryDirectory() as d:
     p=subprocess.run(['python3','/home/ubuntu/scripts/briefing_pipeline/validate_selection.py','--input',str(root),'--response',str(bad),'--output',str(bad_out)],capture_output=True,text=True)
     assert p.returncode!=0
 print('OK: validación por ID y rechazo de vacío falso')
+
+import importlib.util
+spec=importlib.util.spec_from_file_location('compose_stage','/opt/proyectos/noticias-ia/scripts/briefing_pipeline/compose_stage.py')
+assert spec is not None and spec.loader is not None
+compose=importlib.util.module_from_spec(spec); spec.loader.exec_module(compose)
+assert compose.spoken_temperature('-0°C', 'fallback') == 'cero grados'
+assert compose.spoken_temperature('+6°C', 'fallback') == 'seis grados'
+assert compose.spoken_temperature('12', 'fallback') == 'doce grados'
+assert compose.spoken('↖4km/h', 'fallback') == 'noroeste 4 kilómetros por hora'
+print('OK: temperaturas sin cero negativo y unidades pronunciables')

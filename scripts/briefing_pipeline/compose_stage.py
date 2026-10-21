@@ -4,6 +4,48 @@ from __future__ import annotations
 import argparse, json, os, re, tempfile
 from pathlib import Path
 
+SMALL_NUMBERS = {
+    0: 'cero', 1: 'uno', 2: 'dos', 3: 'tres', 4: 'cuatro', 5: 'cinco',
+    6: 'seis', 7: 'siete', 8: 'ocho', 9: 'nueve', 10: 'diez', 11: 'once',
+    12: 'doce', 13: 'trece', 14: 'catorce', 15: 'quince', 16: 'dieciséis',
+    17: 'diecisiete', 18: 'dieciocho', 19: 'diecinueve',
+}
+TENS = {20: 'veinte', 30: 'treinta', 40: 'cuarenta', 50: 'cincuenta'}
+
+def number_words(value: int) -> str:
+    if value in SMALL_NUMBERS:
+        return SMALL_NUMBERS[value]
+    if value in TENS:
+        return TENS[value]
+    if 20 < value < 30:
+        return f'veinti{SMALL_NUMBERS[value - 20]}'
+    if 30 < value < 60:
+        return f'{TENS[value // 10 * 10]} y {SMALL_NUMBERS[value % 10]}'
+    return str(value)
+
+def spoken_temperature(value: str, fallback: str) -> str:
+    raw = (value or '').strip().replace('−', '-')
+    match = re.search(r'([+-]?\d+)', raw)
+    if not match:
+        return fallback
+    number = int(match.group(1))
+    # Nunca permitir que la salida hablada contenga "menos cero" o "-0".
+    return f'{"menos " if number < 0 else ""}{number_words(abs(number))} grados'
+
+def spoken(value: str, fallback: str) -> str:
+    value = (value or '').strip()
+    if not value:
+        return fallback
+    value = re.sub(r'^[+−-]', '', value)
+    value = value.replace('°C', ' grados').replace('°', ' grados')
+    value = value.replace('%', ' por ciento')
+    value = re.sub(r'↖', 'noroeste ', value).replace('↗', 'noreste ')
+    value = value.replace('↘', 'sureste ').replace('↙', 'suroeste ')
+    value = value.replace('→', 'este ').replace('←', 'oeste ')
+    value = value.replace('↑', 'norte ').replace('↓', 'sur ')
+    value = re.sub(r'(?P<n>\d+)km/h', r'\g<n> kilómetros por hora', value)
+    return re.sub(r'\s+', ' ', value).strip()
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--date', required=True)
@@ -17,25 +59,13 @@ def main() -> int:
     if not selection.get('valid'):
         print(json.dumps({'stage':'composition','valid':False,'error':'selection inválida','details':selection.get('errors',[])},ensure_ascii=False))
         return 2
-    def spoken(value: str, fallback: str) -> str:
-        value = (value or '').strip()
-        if not value:
-            return fallback
-        value = re.sub(r'^[+−-]', '', value)
-        value = value.replace('°C', ' grados').replace('°', ' grados')
-        value = value.replace('%', ' por ciento')
-        value = re.sub(r'↖', 'noroeste ', value).replace('↗', 'noreste ')
-        value = value.replace('↘', 'sureste ').replace('↙', 'suroeste ')
-        value = value.replace('→', 'este ').replace('←', 'oeste ')
-        value = value.replace('↑', 'norte ').replace('↓', 'sur ')
-        value = re.sub(r'(?P<n>\\d+)km/h', r'\\g<n> kilómetros por hora', value)
-        return re.sub(r'\\s+', ' ', value).strip()
+
     condition = spoken(weather.get('condition'), 'Condición no disponible')
-    temp = spoken(weather.get('temp'), 'temperatura no disponible')
-    max_temp = spoken(weather.get('max_temp'), 'temperatura máxima no disponible')
+    temp = spoken_temperature(weather.get('temp'), 'temperatura no disponible')
+    max_temp = spoken_temperature(weather.get('max_temp'), 'temperatura máxima no disponible')
     humidity = spoken(weather.get('humidity'), 'humedad no disponible')
     wind = spoken(weather.get('wind'), 'viento no disponible')
-    lines = ['Buenos días Guille, aquí va tu briefing.', '', f'En Andorra hoy: {condition}, {temp}, máxima {max_temp} grados, humedad {humidity}, viento {wind}.', '', 'Mails pendientes:', args.emails.strip(), '', 'Y en noticias de IA y tecnología:']
+    lines = ['Buenos días Guille, aquí va tu briefing.', '', f'En Andorra hoy: {condition}, {temp}, máxima {max_temp}, humedad {humidity}, viento {wind}.', '', 'Mails pendientes:', args.emails.strip(), '', 'Y en noticias de IA y tecnología:']
     for item in selection['response'].splitlines():
         item = item.strip()
         if re.match(r'^(Uno|Dos|Tres|Cuatro|Cinco|Seis|Siete|Ocho|Nueve|Diez)\.\s+', item):
