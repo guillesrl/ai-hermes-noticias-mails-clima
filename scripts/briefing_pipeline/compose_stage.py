@@ -52,6 +52,13 @@ def spoken(value: str, fallback: str) -> str:
     )
     return re.sub(r'\s+', ' ', value).strip()
 
+def spoken_wind(value: str, fallback: str) -> str:
+    raw = (value or '').strip()
+    match = re.search(r'(?P<n>\d+)km/h', raw)
+    if match and int(match.group('n')) == 0:
+        return 'calma, sin viento'
+    return spoken(raw, fallback)
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--date', required=True)
@@ -70,7 +77,7 @@ def main() -> int:
     temp = spoken_temperature(weather.get('temp'), 'temperatura no disponible')
     max_temp = spoken_temperature(weather.get('max_temp'), 'temperatura máxima no disponible')
     humidity = spoken(weather.get('humidity'), 'humedad no disponible')
-    wind = spoken(weather.get('wind'), 'viento no disponible')
+    wind = spoken_wind(weather.get('wind'), 'viento no disponible')
     lines = ['Buenos días Guille, aquí va tu briefing.', '', f'En Andorra hoy: {condition}, {temp}, máxima {max_temp}, humedad {humidity}, viento {wind}.', '', 'Mails pendientes:', args.emails.strip(), '', 'Y en noticias de IA y tecnología:']
     for item in selection['response'].splitlines():
         item = item.strip()
