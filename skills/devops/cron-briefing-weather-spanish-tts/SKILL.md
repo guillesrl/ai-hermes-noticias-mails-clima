@@ -95,7 +95,8 @@ En lugar de:
 2. Olvidar el parámetro `&lang=es` para asegurar texto en español.
 3. No procesar correctamente los símbolos de dirección del viento (↗, →, etc.).
 4. Dejar el símbolo `%` en humedad; siempre convertir a "por ciento".
-5. No agregar unidades explícitas como "grados" o "kilómetros por hora".
+5. Si aparece `percent` o `percentage`, sustituirlo siempre por "por ciento"; el TTS puede pronunciarlo en inglés.
+6. No agregar unidades explícitas como "grados" o "kilómetros por hora".
 
 ## Beneficios
 - Audio del briefing completamente comprensible y natural en español.

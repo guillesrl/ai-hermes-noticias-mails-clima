@@ -28,4 +28,7 @@ assert compose.spoken_temperature('+6°C', 'fallback') == 'seis grados'
 assert compose.spoken_temperature('12', 'fallback') == 'doce grados'
 assert compose.spoken('↖4km/h', 'fallback') == 'noroeste cuatro kilómetros por hora'
 assert compose.spoken_wind('0km/h', 'fallback') == 'calma, sin viento'
+assert compose.spoken('45%', 'fallback') == '45 por ciento'
+assert compose.spoken('45 percent', 'fallback') == '45 por ciento'
+assert compose.spoken('45 PERCENTAGE', 'fallback') == '45 por ciento'
 print('OK: temperaturas sin cero negativo y unidades pronunciables')

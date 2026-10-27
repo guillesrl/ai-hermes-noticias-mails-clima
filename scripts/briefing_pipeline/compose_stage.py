@@ -41,6 +41,10 @@ def spoken(value: str, fallback: str) -> str:
     value = re.sub(r'^[+−-]', '', value)
     value = value.replace('°C', ' grados').replace('°', ' grados')
     value = value.replace('%', ' por ciento')
+    # El TTS puede interpretar "percent" en inglés aunque el resto del texto
+    # esté en español. Normalizar también la palabra evita que se cuele en
+    # clima, titulares o resúmenes de noticias.
+    value = re.sub(r'\bpercent(?:age)?\b', 'por ciento', value, flags=re.I)
     value = re.sub(r'↖', 'noroeste ', value).replace('↗', 'noreste ')
     value = value.replace('↘', 'sureste ').replace('↙', 'suroeste ')
     value = value.replace('→', 'este ').replace('←', 'oeste ')
@@ -86,6 +90,10 @@ def main() -> int:
             lines.append(item)
     lines += ['', 'Eso es todo por hoy.']
     text = '\n'.join(lines).strip() + '\n'
+    # Última barrera: los textos de noticias vienen del modelo y pueden traer
+    # símbolos o la palabra inglesa aunque el clima ya esté normalizado.
+    text = text.replace('%', ' por ciento')
+    text = re.sub(r'\bpercent(?:age)?\b', 'por ciento', text, flags=re.I)
     selected_numbers = re.findall(r'^(Uno|Dos|Tres|Cuatro|Cinco|Seis|Siete|Ocho|Nueve|Diez)\.\s+', text, re.M)
     if len(selected_numbers) != int(selection.get('selected_entries', 0)):
         print(json.dumps({'stage':'composition','valid':False,'error':'No se conservaron todas las noticias seleccionadas'},ensure_ascii=False))
