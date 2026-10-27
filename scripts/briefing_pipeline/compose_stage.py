@@ -11,6 +11,7 @@ SMALL_NUMBERS = {
     17: 'diecisiete', 18: 'dieciocho', 19: 'diecinueve',
 }
 TENS = {20: 'veinte', 30: 'treinta', 40: 'cuarenta', 50: 'cincuenta'}
+HUNDREDS = {100: 'cien', 200: 'doscientos', 300: 'trescientos', 400: 'cuatrocientos', 500: 'quinientos', 600: 'seiscientos', 700: 'setecientos', 800: 'ochocientos', 900: 'novecientos'}
 
 def number_words(value: int) -> str:
     if value in SMALL_NUMBERS:
@@ -21,7 +22,35 @@ def number_words(value: int) -> str:
         return f'veinti{SMALL_NUMBERS[value - 20]}'
     if 30 < value < 60:
         return f'{TENS[value // 10 * 10]} y {SMALL_NUMBERS[value % 10]}'
+    if 60 <= value < 100:
+        tens, units = divmod(value, 10)
+        return f'{number_words(tens * 10)} y {SMALL_NUMBERS[units]}' if units else number_words(tens * 10)
+    if value == 100:
+        return 'cien'
+    if 100 < value < 200:
+        return f'ciento {number_words(value - 100)}'
+    if 200 <= value < 1000:
+        hundreds, remainder = divmod(value, 100)
+        prefix = HUNDREDS[hundreds * 100]
+        return f'{prefix} {number_words(remainder)}' if remainder else prefix
+    if 1000 <= value < 1000000:
+        thousands, remainder = divmod(value, 1000)
+        prefix = 'mil' if thousands == 1 else f'{number_words(thousands)} mil'
+        return f'{prefix} {number_words(remainder)}' if remainder else prefix
+    if 1000000 <= value < 1000000000:
+        millions, remainder = divmod(value, 1000000)
+        prefix = 'un millón' if millions == 1 else f'{number_words(millions)} millones'
+        return f'{prefix} {number_words(remainder)}' if remainder else prefix
     return str(value)
+
+def spoken_numbers(value: str) -> str:
+    """Convierte separadores de miles y números grandes a palabras para TTS."""
+    def replace(match):
+        try:
+            return number_words(int(match.group(0).replace('.', '').replace(',', '')))
+        except ValueError:
+            return match.group(0)
+    return re.sub(r'(?<![\w])\d{1,3}(?:[.,]\d{3})+(?![\w])', replace, value)
 
 def spoken_temperature(value: str, fallback: str) -> str:
     raw = (value or '').strip().replace('−', '-')
@@ -45,6 +74,7 @@ def spoken(value: str, fallback: str) -> str:
     # esté en español. Normalizar también la palabra evita que se cuele en
     # clima, titulares o resúmenes de noticias.
     value = re.sub(r'\bpercent(?:age)?\b', 'por ciento', value, flags=re.I)
+    value = spoken_numbers(value)
     value = re.sub(r'↖', 'noroeste ', value).replace('↗', 'noreste ')
     value = value.replace('↘', 'sureste ').replace('↙', 'suroeste ')
     value = value.replace('→', 'este ').replace('←', 'oeste ')
@@ -94,6 +124,7 @@ def main() -> int:
     # símbolos o la palabra inglesa aunque el clima ya esté normalizado.
     text = text.replace('%', ' por ciento')
     text = re.sub(r'\bpercent(?:age)?\b', 'por ciento', text, flags=re.I)
+    text = spoken_numbers(text)
     selected_numbers = re.findall(r'^(Uno|Dos|Tres|Cuatro|Cinco|Seis|Siete|Ocho|Nueve|Diez)\.\s+', text, re.M)
     if len(selected_numbers) != int(selection.get('selected_entries', 0)):
         print(json.dumps({'stage':'composition','valid':False,'error':'No se conservaron todas las noticias seleccionadas'},ensure_ascii=False))

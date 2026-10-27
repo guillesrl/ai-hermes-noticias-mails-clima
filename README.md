@@ -55,3 +55,5 @@ python3 scripts/briefing_pipeline/tests/test_pipeline.py
 El prompt activo usa el modelo `gpt-5.6-luna` con proveedor `openai-codex`, selecciona entre una y diez noticias cuando existen entradas válidas y mantiene el texto de audio por debajo de 3.900 caracteres.
 
 La composición normaliza el símbolo `%` y las palabras inglesas `percent`/`percentage` a `por ciento` tanto en el clima como en el texto de noticias, para evitar pronunciaciones en inglés durante el TTS.
+
+También convierte números con separadores de miles a palabras —por ejemplo, `20.000` a `veinte mil`, `100.000` a `cien mil` y `1.000.000` a `un millón`— para evitar que el TTS lea los dígitos por separado.
