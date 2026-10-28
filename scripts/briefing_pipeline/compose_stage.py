@@ -12,6 +12,7 @@ SMALL_NUMBERS = {
 }
 TENS = {20: 'veinte', 30: 'treinta', 40: 'cuarenta', 50: 'cincuenta'}
 HUNDREDS = {100: 'cien', 200: 'doscientos', 300: 'trescientos', 400: 'cuatrocientos', 500: 'quinientos', 600: 'seiscientos', 700: 'setecientos', 800: 'ochocientos', 900: 'novecientos'}
+WIND_SPEED_RE = re.compile(r'(?P<n>\d+)\s*km\s*/\s*h', re.IGNORECASE)
 
 def number_words(value: int) -> str:
     if value in SMALL_NUMBERS:
@@ -79,8 +80,7 @@ def spoken(value: str, fallback: str) -> str:
     value = value.replace('↘', 'sureste ').replace('↙', 'suroeste ')
     value = value.replace('→', 'este ').replace('←', 'oeste ')
     value = value.replace('↑', 'norte ').replace('↓', 'sur ')
-    value = re.sub(
-        r'(?P<n>\d+)km/h',
+    value = WIND_SPEED_RE.sub(
         lambda match: f'{number_words(int(match.group("n")))} kilómetros por hora',
         value,
     )
@@ -88,7 +88,7 @@ def spoken(value: str, fallback: str) -> str:
 
 def spoken_wind(value: str, fallback: str) -> str:
     raw = (value or '').strip()
-    match = re.search(r'(?P<n>\d+)km/h', raw)
+    match = WIND_SPEED_RE.search(raw)
     if match and int(match.group('n')) == 0:
         return 'calma, sin viento'
     return spoken(raw, fallback)

@@ -52,7 +52,7 @@ El briefing se divide en etapas pequeñas. La recopilación y las validaciones s
    en `cero grados`, los valores negativos como `-5` en `cinco grados bajo cero`,
    y los valores habituales se escriben en palabras para evitar lecturas ambiguas
    del TTS (`seis grados`, `doce grados`). El viento también se escribe completo:
-   `4km/h` se convierte en `cuatro kilómetros por hora`.
+   `4km/h`, `4 km/h` y variantes en mayúsculas se convierten en `cuatro kilómetros por hora`, para que el TTS no pronuncie `km/h` en inglés.
    Si la velocidad es `0km/h`, se informa como `calma, sin viento`.
 
 5. Audio

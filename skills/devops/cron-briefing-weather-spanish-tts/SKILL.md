@@ -22,7 +22,7 @@ Normaliza siempre las temperaturas antes de enviarlas al texto o al TTS: convier
 `-0`, `+0` y variantes Unicode a `cero grados`, convierte temperaturas negativas
 como `-5` en `cinco grados bajo cero`, elimina el signo positivo y, para evitar
 lecturas ambiguas, escribe los números de temperatura en palabras (`seis grados`,
-`doce grados`). Convierte también `4km/h` en `cuatro kilómetros por hora`.
+`doce grados`). Convierte también `4km/h`, `4 km/h` y variantes en mayúsculas en `cuatro kilómetros por hora`.
 Cuando la velocidad sea `0km/h`, di `calma, sin viento`.
 No confíes en que el motor TTS interprete correctamente los signos o abreviaturas
 de `wttr.in`.
