@@ -9,7 +9,9 @@ category: devops
 # Optimización de Clima en TTS para Cron de Briefing
 
 ## Problema
-Los cron jobs de briefing matutino obtenían el clima de wttr.in con formato que incluía símbolos no pronunciables por TTS (°C, %, →, etc.) y mezclas de idiomas, resultando en audio poco claro.
+Los cron jobs de briefing matutino pueden recibir datos incompletos de un proveedor externo o símbolos no pronunciables por TTS (°C, %, →, etc.), resultando en audio poco claro.
+
+El colector actual usa Open-Meteo para las coordenadas de Andorra (`42.5063`, `1.5218`), sin clave ni registro, como fuente temporal hasta configurar Google Weather API.
 
 ## Solución
 Formatear cada componente del clima por separado para que sea legible y comprensible en síntesis de voz (TTS) en español.

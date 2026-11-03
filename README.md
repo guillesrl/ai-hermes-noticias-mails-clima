@@ -5,7 +5,8 @@ Backup de la configuración de cron y de una skill del agente [Hermes](https://g
 ## Contenido
 
 - `cron/jobs.json` — configuración de los cron jobs de Hermes (`~/.hermes/cron/jobs.json`).
-- `skills/devops/cron-briefing-weather-spanish-tts/` — skill que documenta cómo formatear el clima de wttr.in para que sea pronunciable en TTS en español.
+- `skills/devops/cron-briefing-weather-spanish-tts/` — skill que documenta cómo formatear el clima de Open-Meteo para que sea pronunciable en TTS en español.
+- El colector consulta Open-Meteo para Andorra sin clave ni registro; es una sustitución temporal de Google Weather API.
 
 ## ¿Se puede ejecutar esto con cualquier agente?
 

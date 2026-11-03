@@ -37,4 +37,11 @@ assert compose.weather_sentence({'condition': '', 'temp': '', 'max_temp': '', 'h
 assert compose.weather_sentence({'condition': 'Soleado', 'temp': '21°C', 'max_temp': '24°C', 'humidity': '45%', 'wind': '0km/h'}) == 'En Andorra hoy: Soleado, veintiuno grados, máxima veinticuatro grados, humedad 45 por ciento, viento calma, sin viento.'
 assert compose.spoken_numbers('20.000 y 100.000 y 1.000.000') == 'veinte mil y cien mil y un millón'
 assert compose.spoken('La empresa tiene 20.000 usuarios y 1.000.000 de visitas.', 'fallback') == 'La empresa tiene veinte mil usuarios y un millón de visitas.'
+
+collect_spec=importlib.util.spec_from_file_location('collect_stage','/opt/proyectos/noticias-ia/scripts/briefing_pipeline/collect_stage.py')
+assert collect_spec is not None and collect_spec.loader is not None
+collect=importlib.util.module_from_spec(collect_spec); collect_spec.loader.exec_module(collect)
+assert collect.wind_direction(0) == 'norte'
+assert collect.wind_direction(96) == 'este'
+assert collect.WMO_CONDITIONS[0] == 'Cielo despejado'
 print('OK: temperaturas sin cero negativo y unidades pronunciables')
