@@ -93,6 +93,19 @@ def spoken_wind(value: str, fallback: str) -> str:
         return 'calma, sin viento'
     return spoken(raw, fallback)
 
+
+def weather_sentence(weather: dict) -> str:
+    """Evita una enumeración de cinco errores cuando el proveedor no responde."""
+    values = ('condition', 'temp', 'max_temp', 'humidity', 'wind')
+    if not any(str(weather.get(key) or '').strip() for key in values):
+        return 'Clima no disponible.'
+    condition = spoken(str(weather.get('condition') or ''), 'condición no disponible')
+    temp = spoken_temperature(str(weather.get('temp') or ''), 'temperatura no disponible')
+    max_temp = spoken_temperature(str(weather.get('max_temp') or ''), 'temperatura máxima no disponible')
+    humidity = spoken(str(weather.get('humidity') or ''), 'humedad no disponible')
+    wind = spoken_wind(str(weather.get('wind') or ''), 'viento no disponible')
+    return f'En Andorra hoy: {condition}, {temp}, máxima {max_temp}, humedad {humidity}, viento {wind}.'
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--date', required=True)
@@ -108,11 +121,7 @@ def main() -> int:
         print(json.dumps({'stage':'composition','valid':False,'error':'selection inválida','details':selection.get('errors',[])},ensure_ascii=False))
         return 2
 
-    condition = spoken(weather.get('condition'), 'Condición no disponible')
-    temp = spoken_temperature(weather.get('temp'), 'temperatura no disponible')
-    max_temp = spoken_temperature(weather.get('max_temp'), 'temperatura máxima no disponible')
-    humidity = spoken(weather.get('humidity'), 'humedad no disponible')
-    wind = spoken_wind(weather.get('wind'), 'viento no disponible')
+    weather_line = weather_sentence(weather)
     emails_file = Path(args.emails_file) if args.emails_file else root / 'emails_summary.txt'
     if args.emails is not None:
         emails = args.emails.strip()
@@ -122,7 +131,7 @@ def main() -> int:
         except OSError:
             emails = ''
     emails = emails or 'No hay mails pendientes.'
-    lines = ['Buenos días Guille, aquí va tu briefing.', '', f'En Andorra hoy: {condition}, {temp}, máxima {max_temp}, humedad {humidity}, viento {wind}.', '', 'Mails pendientes:', emails, '', 'Y en noticias de IA y tecnología:']
+    lines = ['Buenos días Guille, aquí va tu briefing.', '', weather_line, '', 'Mails pendientes:', emails, '', 'Y en noticias de IA y tecnología:']
     for item in selection['response'].splitlines():
         item = item.strip()
         if re.match(r'^(Uno|Dos|Tres|Cuatro|Cinco|Seis|Siete|Ocho|Nueve|Diez)\.\s+', item):

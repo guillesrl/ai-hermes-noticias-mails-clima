@@ -95,9 +95,10 @@ En lugar de:
 2. Olvidar el parámetro `&lang=es` para asegurar texto en español.
 3. No procesar correctamente los símbolos de dirección del viento (↗, →, etc.).
 4. Dejar el símbolo `%` en humedad; siempre convertir a "por ciento".
-5. Si aparece `percent` o `percentage`, sustituirlo siempre por "por ciento"; el TTS puede pronunciarlo en inglés.
-6. Convertir números con separadores de miles (`20.000`, `100.000`, `1.000.000`) a palabras antes del TTS; de lo contrario el motor puede leer dígitos separados.
-7. No agregar unidades explícitas como "grados" o "kilómetros por hora".
+5. Si aparece `percent` o `percentage`, sustituirlo siempre por "por ciento"; el TTS puede pronunciarlo en inglés. Esta normalización debe aplicarse al texto completo de noticias, no solo al clima.
+6. Si no hay ningún campo útil de clima, emitir únicamente `Clima no disponible.`; no narrar condición, temperatura, máxima, humedad y viento como cinco valores ausentes.
+7. Convertir números con separadores de miles (`20.000`, `100.000`, `1.000.000`) a palabras antes del TTS; de lo contrario el motor puede leer dígitos separados.
+8. No agregar unidades explícitas como "grados" o "kilómetros por hora".
 
 ## Beneficios
 - Audio del briefing completamente comprensible y natural en español.
