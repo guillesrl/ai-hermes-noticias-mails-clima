@@ -97,7 +97,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--date', required=True)
     ap.add_argument('--workdir', required=True)
-    ap.add_argument('--emails', default='No hay mails pendientes.')
+    ap.add_argument('--emails', default=None)
+    ap.add_argument('--emails-file', default=None)
     ap.add_argument('--output-dir', default='/home/ubuntu/hermes-notes/news')
     args = ap.parse_args()
     root = Path(args.workdir)
@@ -112,7 +113,16 @@ def main() -> int:
     max_temp = spoken_temperature(weather.get('max_temp'), 'temperatura máxima no disponible')
     humidity = spoken(weather.get('humidity'), 'humedad no disponible')
     wind = spoken_wind(weather.get('wind'), 'viento no disponible')
-    lines = ['Buenos días Guille, aquí va tu briefing.', '', f'En Andorra hoy: {condition}, {temp}, máxima {max_temp}, humedad {humidity}, viento {wind}.', '', 'Mails pendientes:', args.emails.strip(), '', 'Y en noticias de IA y tecnología:']
+    emails_file = Path(args.emails_file) if args.emails_file else root / 'emails_summary.txt'
+    if args.emails is not None:
+        emails = args.emails.strip()
+    else:
+        try:
+            emails = emails_file.read_text(encoding='utf-8').strip()
+        except OSError:
+            emails = ''
+    emails = emails or 'No hay mails pendientes.'
+    lines = ['Buenos días Guille, aquí va tu briefing.', '', f'En Andorra hoy: {condition}, {temp}, máxima {max_temp}, humedad {humidity}, viento {wind}.', '', 'Mails pendientes:', emails, '', 'Y en noticias de IA y tecnología:']
     for item in selection['response'].splitlines():
         item = item.strip()
         if re.match(r'^(Uno|Dos|Tres|Cuatro|Cinco|Seis|Siete|Ocho|Nueve|Diez)\.\s+', item):

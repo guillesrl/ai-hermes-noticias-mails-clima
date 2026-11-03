@@ -14,7 +14,8 @@ El briefing se divide en etapas pequeñas. La recopilación y las validaciones s
 
    - `raw-news.json` con IDs estables, fuente, fecha, título y resumen.
 - `raw-news.txt` como vista legible.
-- `emails.json` con estado independiente.
+- `emails.json` con estado independiente y metadatos de Gmail.
+- `emails_summary.txt` con una línea breve por correo (remitente y asunto), listo para incorporar al briefing sin exponer ni leer el campo `snippet`.
 
    La salida queda en `/home/ubuntu/.hermes/briefing-runs/AAAA-MM-DD/`.
 
