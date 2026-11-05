@@ -43,6 +43,8 @@ El briefing se divide en etapas pequeñas. La recopilación y las validaciones s
 
 4. Composición
 
+   El recopilador ya escribe `emails_summary.txt` de forma determinista. El agente debe leerlo y no intentar recrearlo con `write_file`; así se evita el verificador de sobrescritura de Hermes cuando se repite una ejecución.
+
    Script: `/home/ubuntu/scripts/briefing_pipeline/compose_stage.py`
 
    Combina clima, mails y selección validada. Escribe primero un archivo temporal y después lo promociona atómicamente a:
